@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>MasterChef Tracker Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        --mc-red: #920000;
+        --mc-red-bright: #b30000;
+        --bg: #ffffff;
+        --surface: #f8f9fa;
+        --text: #1a1a1a;
+        --border: #e0e0e0;
+        --tab-bg: #ffffff;
+        --success: #2e7d32;
+      }
+
+      .dark-mode {
+        --bg: #0b0b0b;
+        --surface: #1a1a1a;
+        --text: #f5f5f5;
+        --border: #333333;
+        --tab-bg: #121212;
+        --success: #4caf50;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg);
+        color: var(--text);
+        transition: background 0.3s, color 0.3s;
+        padding-bottom: 80px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .logo {
+        font-weight: 900;
+        font-size: 1.2rem;
+        color: var(--mc-red);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .settings-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text);
+      }
+
+      .ep-nav-bar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        padding: 15px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .ep-nav-btn {
+        background: var(--mc-red);
+        color: white;
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .ep-nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--tab-bg);
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+      }
+
+      .nav-item {
+        background: none;
+        border: none;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 0.75rem;
+        opacity: 0.5;
+        transition: 0.2s;
+        cursor: pointer;
+      }
+      .nav-item.active {
+        opacity: 1;
+        color: var(--mc-red);
+        font-weight: bold;
+      }
+      .nav-item span {
+        font-size: 1.4rem;
+        margin-bottom: 3px;
+      }
+
+      .app-content {
+        padding: 15px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .btn {
+        padding: 10px 18px;
+        font-weight: bold;
+        background: var(--mc-red);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .btn-success {
+        background: var(--success);
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .btn-warning {
+        background: #f57c00;
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 30px;
+        font-weight: bold;
+        width: 100%;
+        cursor: pointer;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      th {
+        text-align: left;
+        padding: 10px 5px;
+        border-bottom: 2px solid var(--mc-red);
+        opacity: 0.8;
+      }
+      td {
+        padding: 12px 5px;
+        border-bottom: 1px solid var(--border);
+      }
+      .name-col {
+        font-weight: bold;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      select {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 8px 4px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        width: 100%;
+      }
+
+      .eliminado-row {
+        opacity: 0.4;
+        background: var(--surface);
+        pointer-events: none;
+      }
+      .historico-pts {
+        font-weight: bold;
+        color: var(--mc-red);
+        font-size: 1.1em;
+        text-align: center;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+      .modal-content {
+        background: var(--surface);
+        padding: 25px;
+        border-radius: 15px;
+        width: 85%;
+        max-width: 400px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .modal-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      input {
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      }
+      .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body class="dark-mode">
+    <header>
+      <div class="logo">MC Tracker</div>
+      <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+    </header>
+
+    <div id="epNavBar" class="ep-nav-bar hidden">
+      <button class="ep-nav-btn" id="prevEp" onclick="navEp(-1)">‹</button>
+      <div style="text-align: center; min-width: 100px">
+        <div
+          style="
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          "
+        >
+          Episódio
+        </div>
+        <div id="displayEpNumber" style="font-weight: 900; font-size: 1.3rem">
+          1
+        </div>
+      </div>
+      <button class="ep-nav-btn" id="nextEp" onclick="navEp(1)">›</button>
+    </div>
+
+    <div class="app-content">
+      <div id="loadingScreen">
+        <h3 style="text-align: center; margin-top: 50px">
+          Conectando à cozinha...
+        </h3>
+        <div
+          id="loadingError"
+          style="color: var(--mc-red); text-align: center"
+        ></div>
+      </div>
+
+      <div id="seasonSelector" class="hidden">
+        <h2 style="margin-top: 0">Temporadas</h2>
+        <div
+          id="seasonList"
+          style="display: flex; flex-direction: column; gap: 10px"
+        ></div>
+        <br />
+        <button
+          class="btn-success"
+          onclick="showNewSeasonForm()"
+          style="width: 100%; padding: 15px"
+        >
+          + Nova Temporada
+        </button>
+      </div>
+
+      <div id="newSeasonForm" class="hidden">
+        <h2>Nova Temporada</h2>
+        <input
+          type="text"
+          id="seasonNameInput"
+          placeholder="Nome (Ex: Amadores 2026)"
+        />
+        <div id="participantsContainer"></div>
+        <button
+          class="btn-outline"
+          onclick="addParticipantRow('participantsContainer')"
+          style="width: 100%; margin-bottom: 15px"
+        >
+          + Adicionar Participante
+        </button>
+        <div style="display: flex; gap: 10px">
+          <button class="btn-success" onclick="saveNewSeason()" style="flex: 2">
+            Criar
+          </button>
+          <button
+            class="btn"
+            style="background: #555; flex: 1"
+            onclick="location.reload()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+
+      <div id="tab-pontuar" class="tab-content hidden">
+        <div
+          id="avisoEdicao"
+          style="
+            background: var(--success);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+          "
+          class="hidden"
+        >
+          MODO DE CORREÇÃO: Altere as notas para sobrescrever.
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Chef</th>
+              <th id="th-p1">Prova 1</th>
+              <th id="th-p2">Prova 2</th>
+              <th style="text-align: center">Total</th>
+            </tr>
+          </thead>
+          <tbody id="scoringBody"></tbody>
+        </table>
+        <div style="margin-top: 25px">
+          <button
+            id="btnSalvarEpi"
+            class="btn"
+            style="
+              width: 100%;
+              padding: 15px;
+              font-size: 1.1rem;
+              border-radius: 30px;
+            "
+            onclick="submitEpisodeScores()"
+          >
+            Salvar Episódio
+          </button>
+        </div>
+      </div>
+
+      <div id="tab-evolucao" class="tab-content hidden">
+        <h3 style="margin-top: 0">Evolução de Pontos</h3>
+        <div class="chart-container"><canvas id="evolutionChart"></canvas></div>
+      </div>
+
+      <div id="tab-ranking" class="tab-content hidden">
+        <h3 style="margin-top: 0">Ranking por Episódio</h3>
+        <div class="chart-container"><canvas id="rankingChart"></canvas></div>
+      </div>
+
+      <div id="tab-ia" class="tab-content hidden">
+        <h3 style="margin-top: 0">Análise da IA</h3>
+        <button
+          class="btn"
+          style="width: 100%; padding: 15px; border-radius: 30px"
+          onclick="analisarComIA()"
+        >
+          Gerar Previsão
+        </button>
+        <div
+          id="iaResult"
+          style="
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--surface);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+          "
+        ></div>
+      </div>
+    </div>
+
+    <nav id="bottomNav" class="bottom-nav hidden">
+      <button class="nav-item active" onclick="switchTab('tab-pontuar', this)">
+        <span>🍳</span>Pontos
+      </button>
+      <button class="nav-item" onclick="switchTab('tab-evolucao', this)">
+        <span>📈</span>Evolução
+      </button>
+      <button class="nav-item" onclick="switchTab('tab-ranking', this)">
+        <span>🏆</span>Rank
+      </button>
+      <button class="nav-item" onclick="switchTab('tab-ia', this)">
+        <span>✨</span>IA
+      </button>
+    </nav>
+
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-content">
+        <h2 style="margin-top: 0; text-align: center">Configurações</h2>
+        <button class="modal-btn" onclick="toggleTheme()">
+          🌓 Alternar Tema
+        </button>
+        <button class="modal-btn" onclick="location.reload()">
+          📁 Trocar de Temporada
+        </button>
+        <button class="modal-btn" onclick="openEditSeasonForm()">
+          ✏️ Editar Temporada
+        </button>
+        <hr style="border-color: var(--border); margin: 20px 0" />
+        <button class="btn" style="width: 100%" onclick="toggleSettings()">
+          Fechar
+        </button>
+      </div>
+    </div>
+
+    <div id="editSeasonModal" class="modal hidden">
+      <div class="modal-content">
+        <h2 style="margin-top: 0">Editar Temporada</h2>
+        <label>Novo Nome (Opcional):</label>
+        <input type="text" id="editSeasonName" placeholder="Novo nome..." />
+
+        <h3 style="margin-bottom: 5px">Adicionar Participantes</h3>
+        <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 0">
+          Adicione aqui participantes que entraram depois (repescagem, etc).
+        </p>
+        <div id="editParticipantsContainer"></div>
+        <button
+          class="btn-outline"
+          onclick="addParticipantRow('editParticipantsContainer')"
+          style="width: 100%; margin-bottom: 15px"
+        >
+          + Participante Extra
+        </button>
+
+        <div style="display: flex; gap: 10px">
+          <button
+            class="btn-success"
+            onclick="saveEditedSeason()"
+            style="flex: 2"
+          >
+            Salvar Alterações
+          </button>
+          <button
+            class="btn"
+            style="background: #555; flex: 1"
+            onclick="document.getElementById('editSeasonModal').classList.add('hidden')"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // === SEU LINK DO APPS SCRIPT ===
+      const SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbwfQKct4Q0g3IhvnI6Huu4tN8GVVVpMNSaE1Xxu9-cA3MFLYYRqPLCGxxztTeJtMPKH/exec";
+
+      let currentSeasonData = [];
+      let currentSeasonName = "";
+      let viewingEp = 1;
+      let maxEp = 1;
+      let chartsObj = { evo: null, rank: null };
+      const baseCols = 5;
+
+      async function safeFetch(url, options = {}) {
+        options.redirect = "follow";
+        const res = await fetch(url, options);
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          throw new Error(
+            text.includes("<html")
+              ? "Permissão negada pelo Google."
+              : "Erro no servidor."
+          );
+        }
+      }
+
+      async function init() {
+        try {
+          const seasons = await safeFetch(SCRIPT_URL + "?action=listSeasons");
+          document.getElementById("loadingScreen").classList.add("hidden");
+          const list = document.getElementById("seasonList");
+          seasons.forEach((s) => {
+            const b = document.createElement("button");
+            b.className = "modal-btn";
+            b.style.padding = "20px";
+            b.innerText = s;
+            b.onclick = () => loadSeasonDashboard(s);
+            list.appendChild(b);
+          });
+          document.getElementById("seasonSelector").classList.remove("hidden");
+        } catch (e) {
+          document.getElementById(
+            "loadingError"
+          ).innerHTML = `${e.message} <br><br><button class="btn" onclick="location.reload()">Tentar Novamente</button>`;
+        }
+      }
+
+      function showNewSeasonForm() {
+        document.getElementById("seasonSelector").classList.add("hidden");
+        document.getElementById("newSeasonForm").classList.remove("hidden");
+        addParticipantRow("participantsContainer");
+      }
+
+      function addParticipantRow(containerId) {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.gap = "5px";
+        row.style.marginBottom = "5px";
+        row.className = "participant-row";
+        row.innerHTML = `
+                <input type="text" placeholder="Nome" class="p-nome" style="margin:0;">
+                <input type="text" placeholder="Estado (SP)" style="width: 80px; margin:0;">
+                <button class="btn-outline" style="border-color: var(--mc-red); color: var(--mc-red); padding: 0 15px;" onclick="this.parentElement.remove()">X</button>
+            `;
+        document.getElementById(containerId).appendChild(row);
+      }
+
+      async function saveNewSeason() {
+        const name = document.getElementById("seasonNameInput").value.trim();
+        if (!name) return;
+        const parts = [];
+        document
+          .querySelectorAll("#newSeasonForm .participant-row")
+          .forEach((r) => {
+            const n = r.querySelector(".p-nome").value.trim();
+            if (n)
+              parts.push({
+                nome: n,
+                idade: "",
+                estado: r.children[1].value,
+                profissao: "",
+              });
+          });
+        document.getElementById("newSeasonForm").innerHTML =
+          "<h2>Criando na planilha...</h2>";
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "createSeason",
+            seasonName: name,
+            participants: parts,
+          }),
+        });
+        location.reload();
+      }
+
+      async function loadSeasonDashboard(seasonName, openTab = "tab-pontuar") {
+        currentSeasonName = seasonName;
+        document.getElementById("seasonSelector").classList.add("hidden");
+        document.getElementById("tab-pontuar").classList.add("hidden");
+        document.getElementById("loadingScreen").classList.remove("hidden");
+
+        try {
+          const data2D = await safeFetch(
+            SCRIPT_URL +
+              `?action=readSeason&name=${encodeURIComponent(seasonName)}`
+          );
+          currentSeasonData = data2D;
+          maxEp = data2D[0].length - baseCols;
+          viewingEp = maxEp + 1; // Abre no próximo a pontuar
+
+          document.getElementById("loadingScreen").classList.add("hidden");
+          document.getElementById("epNavBar").classList.remove("hidden");
+          document.getElementById("bottomNav").classList.remove("hidden");
+
+          renderEpisode();
+          renderCharts(data2D, maxEp);
+
+          const navBtn = document.querySelector(
+            `.nav-item[onclick*="${openTab}"]`
+          );
+          switchTab(openTab, navBtn);
+        } catch (e) {
+          alert("Erro ao carregar");
+          location.reload();
+        }
+      }
+
+      // === RENDERIZA O EPISÓDIO (PONTUAR OU EDITAR) ===
+      function renderEpisode() {
+        document.getElementById("displayEpNumber").innerText = viewingEp;
+        document.getElementById("prevEp").disabled = viewingEp <= 1;
+        document.getElementById("nextEp").disabled = viewingEp > maxEp;
+
+        const isPast = viewingEp <= maxEp;
+        const tbody = document.getElementById("scoringBody");
+        tbody.innerHTML = "";
+
+        document
+          .getElementById("avisoEdicao")
+          .classList.toggle("hidden", !isPast);
+
+        const btnSalvar = document.getElementById("btnSalvarEpi");
+        btnSalvar.innerText = isPast ? "Atualizar Episódio" : "Salvar Episódio";
+        btnSalvar.className = isPast ? "btn-warning" : "btn";
+
+        currentSeasonData.slice(1).forEach((row, index) => {
+          const nome = row[0];
+          const status = row[4];
+          const tr = document.createElement("tr");
+
+          let ptsSalvos = isPast ? row[baseCols + viewingEp - 1] || 0 : 100;
+
+          // Lógica para esconder quem JÁ FOI eliminado em episódios anteriores
+          let wasEliminatedBefore = false;
+          if (status === "Eliminado") {
+            if (
+              viewingEp > 1 &&
+              (row[baseCols + viewingEp - 2] === 0 ||
+                row[baseCols + viewingEp - 2] === "")
+            ) {
+              wasEliminatedBefore = true;
+            }
+          }
+
+          if (wasEliminatedBefore) {
+            tr.className = "eliminado-row";
+            tr.innerHTML = `<td class="name-col">${nome}</td><td colspan="3" style="text-align:center;">Eliminado</td>`;
+          } else {
+            // Independente se é passado ou presente, mostra os dropdowns para permitir EDIÇÃO
+            tr.innerHTML = `
+                        <td class="name-col">${nome}</td>
+                        <td>
+                            <select class="prova1" onchange="calcPts(${index}, this)">
+                                <option value="50">Média</option>
+                                <option value="100">Venceu (100)</option>
+                                <option value="90">Destaq+ (90)</option>
+                                <option value="40">Destaq- (40)</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="prova2" onchange="calcPts(${index}, this)">
+                                <option value="50">Média</option>
+                                <option value="80">Venceu (80)</option>
+                                <option value="70">Destaq+ (70)</option>
+                                <option value="60">Mezanino (60)</option>
+                                <option value="30">Destaq- (30)</option>
+                                <option value="0">Eliminado</option>
+                            </select>
+                        </td>
+                        <td class="pontos-total" id="tot-${index}">${ptsSalvos}</td>
+                    `;
+          }
+          tr.dataset.rowIndex = index;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function navEp(dir) {
+        viewingEp += dir;
+        if (viewingEp < 1) viewingEp = 1;
+        if (viewingEp > maxEp + 1) viewingEp = maxEp + 1;
+        renderEpisode();
+      }
+
+      window.calcPts = function (index, el) {
+        const row = el.closest("tr");
+        const v1 = parseInt(row.querySelector(".prova1").value);
+        const p2 = row.querySelector(".prova2");
+
+        if (v1 === 100 || v1 === 90)
+          p2.style.border = "2px solid var(--success)";
+        else p2.style.border = "1px solid var(--border)";
+
+        document.getElementById(`tot-${index}`).innerText =
+          v1 + parseInt(p2.value);
+        row.style.background =
+          parseInt(p2.value) === 0 ? "rgba(255,0,0,0.1)" : "";
+      };
+
+      // Salvar ou Sobrescrever
+      async function submitEpisodeScores() {
+        const rows = document.querySelectorAll(
+          "#scoringBody tr:not(.eliminado-row)"
+        );
+        const scores = [];
+        rows.forEach((r) => {
+          const p2Val = parseInt(r.querySelector(".prova2").value);
+          scores.push({
+            rowIndex: parseInt(r.dataset.rowIndex),
+            score: parseInt(r.querySelector(".pontos-total").innerText),
+            isEliminated: p2Val === 0,
+          });
+        });
+
+        document.getElementById("btnSalvarEpi").innerText =
+          "Enviando para a planilha...";
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "saveEpisode",
+            seasonName: currentSeasonName,
+            episodeNumber: viewingEp,
+            scores: scores,
+          }),
+        });
+
+        loadSeasonDashboard(currentSeasonName, "tab-evolucao");
+      }
+
+      // === EDITAR TEMPORADA (ABRE MODAL) ===
+      function openEditSeasonForm() {
+        document.getElementById("settingsModal").classList.add("hidden");
+        document.getElementById("editSeasonName").value = currentSeasonName;
+        document.getElementById("editParticipantsContainer").innerHTML = "";
+        document.getElementById("editSeasonModal").classList.remove("hidden");
+      }
+
+      async function saveEditedSeason() {
+        const newName = document.getElementById("editSeasonName").value.trim();
+        const parts = [];
+        document
+          .querySelectorAll("#editSeasonModal .participant-row")
+          .forEach((r) => {
+            const n = r.querySelector(".p-nome").value.trim();
+            if (n) parts.push({ nome: n, estado: r.children[1].value });
+          });
+
+        document.getElementById("editSeasonModal").innerHTML =
+          "<div class='modal-content'><h2>Salvando alterações...</h2></div>";
+
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "editSeason",
+            oldName: currentSeasonName,
+            newName: newName,
+            newParticipants: parts,
+          }),
+        });
+        location.reload();
+      }
+
+      function switchTab(tabId, btn) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((c) => c.classList.add("hidden"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(tabId).classList.remove("hidden");
+        if (btn) btn.classList.add("active");
+      }
+
+      function toggleSettings() {
+        document.getElementById("settingsModal").classList.toggle("hidden");
+      }
+      function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+        toggleSettings();
+      }
+
+      // Gráficos
+      function renderCharts(data, epCount) {
+        if (epCount === 0) return;
+        const labels = Array.from({ length: epCount }, (_, i) => `Ep ${i + 1}`);
+        const colors = [
+          "#ff5252",
+          "#4caf50",
+          "#ffeb3b",
+          "#448aff",
+          "#ff9800",
+          "#e040fb",
+          "#00bcd4",
+        ];
+        let rows = data.slice(1);
+
+        let evoDatasets = [];
+        let rankingDataMatrix = [];
+
+        rows.forEach((row, pIndex) => {
+          let pointsHistory = [];
+          let acc = 0;
+          for (let e = 0; e < epCount; e++) {
+            acc += row[baseCols + e] || 0;
+            pointsHistory.push(acc);
+          }
+          rankingDataMatrix.push(pointsHistory);
+          evoDatasets.push({
+            label: row[0],
+            data: pointsHistory,
+            borderColor: colors[pIndex % colors.length],
+            tension: 0.2,
+            borderDash: row[4] === "Eliminado" ? [5, 5] : [],
+          });
+        });
+
+        if (chartsObj.evo) chartsObj.evo.destroy();
+        chartsObj.evo = new Chart(document.getElementById("evolutionChart"), {
+          type: "line",
+          data: { labels: labels, datasets: evoDatasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+
+        let rankDatasets = [];
+        rows.forEach((row, pIndex) => {
+          let rankHistory = [];
+          for (let e = 0; e < epCount; e++) {
+            let ptsNoEp = rankingDataMatrix.map((h) => h[e]);
+            let ordenados = [...new Set(ptsNoEp)].sort((a, b) => b - a);
+            let meusPts = rankingDataMatrix[pIndex][e];
+            if (
+              row[4] === "Eliminado" &&
+              e > 0 &&
+              meusPts === rankingDataMatrix[pIndex][e - 1]
+            ) {
+              rankHistory.push(null);
+            } else {
+              rankHistory.push(ordenados.indexOf(meusPts) + 1);
+            }
+          }
+          rankDatasets.push({
+            label: row[0],
+            data: rankHistory,
+            borderColor: colors[pIndex % colors.length],
+            spanGaps: true,
+          });
+        });
+
+        if (chartsObj.rank) chartsObj.rank.destroy();
+        chartsObj.rank = new Chart(document.getElementById("rankingChart"), {
+          type: "line",
+          data: { labels: labels, datasets: rankDatasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { reverse: true, min: 1, ticks: { stepSize: 1 } } },
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+      }
+
+      async function analisarComIA() {
+        if (currentSeasonData.length <= 1)
+          return alert("Sem dados suficientes.");
+        const resDiv = document.getElementById("iaResult");
+        resDiv.innerHTML = "<em>Cozinhando os dados...</em>";
+
+        const epCount = currentSeasonData[0].length - baseCols;
+        let txt = "NOME|STATUS|PONTOS\n";
+        currentSeasonData.slice(1).forEach((r) => {
+          let pts = [];
+          for (let i = 0; i < epCount; i++)
+            pts.push(`E${i + 1}:${r[baseCols + i] || 0}`);
+          txt += `${r[0]}|${r[4]}|${pts.join(",")}\n`;
+        });
+
+        try {
+          const res = await fetch(SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            redirect: "follow",
+            body: JSON.stringify({
+              action: "analyzeAI",
+              promptText: `Analise o MasterChef:\n${txt}`,
+            }),
+          });
+          let html = await res.text();
+          resDiv.innerHTML = html
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+            .replace(/\n/g, "<br>");
+        } catch (e) {
+          resDiv.innerHTML = "Erro na IA.";
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

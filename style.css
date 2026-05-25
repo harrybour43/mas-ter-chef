@@ -1,0 +1,408 @@
+/* ==========================================================================
+   VARIÁVEIS DE TEMA (Design System)
+   Tecnologia: CSS3 Custom Properties (Variáveis CSS)
+   ========================================================================== */
+:root {
+    --mc-red: #920000;
+    --mc-red-bright: #b30000;
+    --bg: #ffffff;
+    --surface: #f8f9fa;
+    --text: #1a1a1a;
+    --border: #e0e0e0;
+    --tab-bg: #ffffff;
+    --success: #2e7d32;
+}
+
+.dark-mode {
+    --bg: #0b0b0b;
+    --surface: #1a1a1a;
+    --text: #f5f5f5;
+    --border: #333333;
+    --tab-bg: #121212;
+    --success: #4caf50;
+}
+
+/* ==========================================================================
+   ESTILOS GERAIS E LAYOUT BASE
+   ========================================================================== */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background 0.3s, color 0.3s;
+    padding-bottom: 80px; /* Garante que o conteúdo não fique escondido sob a nav inferior */
+}
+
+.app-content {
+    padding: 15px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   COMPONENTES DE CABEÇALHO E NAVEGAÇÃO
+   ========================================================================== */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: var(--mc-red);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text);
+}
+
+/* Navegação de Episódios (Máquina do tempo) */
+.ep-nav-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.ep-nav-btn {
+    background: var(--mc-red);
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.ep-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Barra de Navegação Inferior (Mobile Friendly) */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--tab-bg);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    opacity: 0.5;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+.nav-item.active {
+    opacity: 1;
+    color: var(--mc-red);
+    font-weight: bold;
+}
+
+.nav-item span {
+    font-size: 1.4rem;
+    margin-bottom: 3px;
+}
+
+/* ==========================================================================
+   BOTÕES E FORMULÁRIOS
+   ========================================================================== */
+.btn {
+    padding: 10px 18px;
+    font-weight: bold;
+    background: var(--mc-red);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-warning {
+    background: #f57c00;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 30px;
+    font-weight: bold;
+    width: 100%;
+    cursor: pointer;
+}
+
+input[type="text"], input[type="date"], input[type="time"], input[type="number"] {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+select {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 4px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    width: 100%;
+}
+
+/* ==========================================================================
+   TABELAS E MODAIS
+   ========================================================================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+th {
+    text-align: left;
+    padding: 10px 5px;
+    border-bottom: 2px solid var(--mc-red);
+    opacity: 0.8;
+}
+
+td {
+    padding: 12px 5px;
+    border-bottom: 1px solid var(--border);
+}
+
+.name-col {
+    font-weight: bold;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.eliminado-row {
+    opacity: 0.4;
+    background: var(--surface);
+    pointer-events: none;
+}
+
+.historico-pts {
+    font-weight: bold;
+    color: var(--mc-red);
+    font-size: 1.1em;
+    text-align: center;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: var(--surface);
+    padding: 25px;
+    border-radius: 15px;
+    width: 85%;
+    max-width: 400px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   GRÁFICOS E CORRIDA DE BARRAS (BAR CHART RACE)
+   ========================================================================== */
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.scrubber-container {
+    margin: 20px 0;
+}
+
+/* Customização do slider input */
+input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: var(--mc-red);
+    cursor: pointer;
+    margin-top: -10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.race-track {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 350px;
+    gap: 8px;
+    padding-top: 50px;
+    margin-bottom: 10px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.race-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+    transition: flex 0.4s ease-in-out;
+}
+
+.race-grow-area {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+}
+
+.race-bar {
+    width: 100%;
+    max-width: 45px;
+    background: var(--mc-red);
+    border-radius: 6px 6px 0 0;
+    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.race-photo {
+    position: absolute;
+    top: -25px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid var(--mc-red);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    overflow: hidden;
+    z-index: 2;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    font-size: 0.9rem;
+    color: var(--text);
+    background-size: cover;
+    background-position: center;
+}
+
+.race-score {
+    position: absolute;
+    top: -45px;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: var(--text);
+    z-index: 3;
+}
+
+.race-name {
+    font-size: 0.65rem;
+    text-align: center;
+    margin-top: 8px;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: bold;
+    text-transform: uppercase;
+}

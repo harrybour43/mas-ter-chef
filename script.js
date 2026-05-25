@@ -255,7 +255,7 @@ async function submitEpisodeScores() {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-            action: "saveEpisode",
+            action: "sode",
             seasonName: currentSeasonName,
             episodeNumber: viewingEp,
             scores: scores,
@@ -453,3 +453,44 @@ async function analisarComIA() {
 
 // Disparo primário ao abrir a página
 init();
+
+// Função auxiliar para calcular o total do episódio somando as duas colunas
+function getEpisodeTotal(row, epNum) {
+    // Exemplo: Ep 1 usa coluna 1 (baseCols + 0) e 2 (baseCols + 1)
+    // Se você tem 5 colunas base (A a E), o Ep1 começa na coluna 6 e 7
+    let colA = baseCols + (epNum * 2) - 2; 
+    let colB = baseCols + (epNum * 2) - 1;
+    
+    let valA = parseFloat(row[colA]) || 0;
+    let valB = parseFloat(row[colB]) || 0;
+    return valA + valB;
+}
+
+function buildDashboard(data2D) {
+    const tbody = document.getElementById("scoringBody");
+    tbody.innerHTML = "";
+
+    // viewingEp agora define qual par de colunas vamos exibir
+    currentSeasonData.slice(1).forEach((row, index) => {
+        const nome = row[0];
+        const status = row[4];
+        const tr = document.createElement("tr");
+
+        // Cálculo dos pontos do episódio atual
+        let totalEp = getEpisodeTotal(row, viewingEp);
+
+        if (status === "Eliminado") {
+            tr.className = "eliminado-row";
+            tr.innerHTML = `<td class="name-col">${nome}</td><td colspan="3" style="text-align:center;">ELIMINADO</td>`;
+        } else {
+            tr.innerHTML = `
+                <td class="name-col">${nome}</td>
+                <td><select class="prova1" onchange="calcPts(${index}, this)"><option value="50">50</option>...</select></td>
+                <td><select class="prova2" onchange="calcPts(${index}, this)"><option value="50">50</option>...</select></td>
+                <td class="pontos-total" id="tot-${index}">${totalEp}</td>
+            `;
+        }
+        tr.dataset.rowIndex = index;
+        tbody.appendChild(tr);
+    });
+}

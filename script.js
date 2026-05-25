@@ -151,65 +151,57 @@ async function loadSeasonDashboard(seasonName, openTab = "tab-pontuar") {
     }
 }
 
-// Renderiza a interface de notas baseada no episódio ativo (`viewingEp`)
+/* ==========================================================================
+   ATUALIZADO: Lógica de separação por provas (P1 e P2)
+   ========================================================================== */
+
 function renderEpisode() {
     document.getElementById("displayEpNumber").innerText = viewingEp;
-    document.getElementById("prevEp").disabled = viewingEp <= 1;
-    document.getElementById("nextEp").disabled = viewingEp > maxEp;
+    document.getElementById("prevEp").disabled = (viewingEp <= 1);
+    document.getElementById("nextEp").disabled = (viewingEp > maxEp);
 
-    const isPast = viewingEp <= maxEp; // Define se estamos visualizando o passado (Modo Edição)
+    const isPast = viewingEp <= maxEp;
     const tbody = document.getElementById("scoringBody");
     tbody.innerHTML = "";
 
-    document.getElementById("avisoEdicao").classList.toggle("hidden", !isPast);
+    // Pega o par de colunas relativo ao episódio atual
+    // Ep1: Colunas baseCols (index 5) e baseCols+1 (index 6)
+    // Ep2: Colunas baseCols+2 e baseCols+3...
+    const colP1 = baseCols + (viewingEp - 1) * 2;
+    const colP2 = baseCols + (viewingEp - 1) * 2 + 1;
 
-    const btnSalvar = document.getElementById("btnSalvarEpi");
-    btnSalvar.innerText = isPast ? "Atualizar Episódio" : "Salvar Episódio";
-    btnSalvar.className = isPast ? "btn-warning" : "btn";
-
-    // Itera pela matriz pulando o cabeçalho (slice 1)
     currentSeasonData.slice(1).forEach((row, index) => {
         const nome = row[0];
         const status = row[4];
         const tr = document.createElement("tr");
 
-        let ptsSalvos = isPast ? row[baseCols + viewingEp - 1] || 0 : 100;
+        // Pega valores salvos na planilha
+        let ptsP1 = row[colP1] || 50; 
+        let ptsP2 = row[colP2] || 50;
+        let total = ptsP1 + ptsP2;
 
-        // Lógica de eliminação: se caiu em episódio anterior, não renderiza inputs
-        let wasEliminatedBefore = false;
-        if (status === "Eliminado") {
-            if (viewingEp > 1 && (row[baseCols + viewingEp - 2] === 0 || row[baseCols + viewingEp - 2] === "")) {
-                wasEliminatedBefore = true;
-            }
-        }
-
-        if (wasEliminatedBefore) {
-            tr.className = "eliminado-row";
-            tr.innerHTML = `<td class="name-col">${nome}</td><td colspan="3" style="text-align:center;">Eliminado</td>`;
-        } else {
-            tr.innerHTML = `
-                <td class="name-col">${nome}</td>
-                <td>
-                    <select class="prova1" onchange="calcPts(${index}, this)">
-                        <option value="50">Média</option>
-                        <option value="100">Venceu (100)</option>
-                        <option value="90">Destaq+ (90)</option>
-                        <option value="40">Destaq- (40)</option>
-                    </select>
-                </td>
-                <td>
-                    <select class="prova2" onchange="calcPts(${index}, this)">
-                        <option value="50">Média</option>
-                        <option value="80">Venceu (80)</option>
-                        <option value="70">Destaq+ (70)</option>
-                        <option value="60">Mezanino (60)</option>
-                        <option value="30">Destaq- (30)</option>
-                        <option value="0">Eliminado</option>
-                    </select>
-                </td>
-                <td class="pontos-total" id="tot-${index}">${ptsSalvos}</td>
-            `;
-        }
+        tr.innerHTML = `
+            <td class="name-col">${nome}</td>
+            <td>
+                <select class="prova1" onchange="calcPts(${index}, this)">
+                    <option value="50" ${ptsP1==50?'selected':''}>Média</option>
+                    <option value="100" ${ptsP1==100?'selected':''}>Venceu (100)</option>
+                    <option value="90" ${ptsP1==90?'selected':''}>Destaq+ (90)</option>
+                    <option value="40" ${ptsP1==40?'selected':''}>Destaq- (40)</option>
+                </select>
+            </td>
+            <td>
+                <select class="prova2" onchange="calcPts(${index}, this)">
+                    <option value="50" ${ptsP2==50?'selected':''}>Média</option>
+                    <option value="80" ${ptsP2==80?'selected':''}>Venceu (80)</option>
+                    <option value="70" ${ptsP2==70?'selected':''}>Destaq+ (70)</option>
+                    <option value="60" ${ptsP2==60?'selected':''}>Mezanino (60)</option>
+                    <option value="30" ${ptsP2==30?'selected':''}>Destaq- (30)</option>
+                    <option value="0" ${ptsP2==0?'selected':''}>Eliminado</option>
+                </select>
+            </td>
+            <td class="pontos-total" id="tot-${index}">${total}</td>
+        `;
         tr.dataset.rowIndex = index;
         tbody.appendChild(tr);
     });
@@ -237,33 +229,35 @@ window.calcPts = function (index, el) {
     row.style.background = parseInt(p2.value) === 0 ? "rgba(255,0,0,0.1)" : "";
 };
 
-// Submete a pontuação da tabela atual
+// Salva separadamente P1 e P2 na planilha
 async function submitEpisodeScores() {
     const rows = document.querySelectorAll("#scoringBody tr:not(.eliminado-row)");
     const scores = [];
+    
     rows.forEach((r) => {
-        const p2Val = parseInt(r.querySelector(".prova2").value);
         scores.push({
             rowIndex: parseInt(r.dataset.rowIndex),
-            score: parseInt(r.querySelector(".pontos-total").innerText),
-            isEliminated: p2Val === 0,
+            p1: parseInt(r.querySelector(".prova1").value),
+            p2: parseInt(r.querySelector(".prova2").value)
         });
     });
 
-    document.getElementById("btnSalvarEpi").innerText = "Enviando para a planilha...";
+    document.getElementById("btnSalvarEpi").innerText = "Enviando...";
+    
+    // ATENÇÃO: Como não vamos mexer no .gs, vamos usar a lógica de enviar o par de colunas
+    // O seu .gs atual precisa ser capaz de receber essas notas. 
+    // Se o seu .gs atual grava apenas uma coluna, você precisará atualizar a função saveEpisode no Apps Script 
+    // para gravar duas colunas em vez de uma só.
     await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-            action: "sode",
-            seasonName: currentSeasonName,
-            episodeNumber: viewingEp,
-            scores: scores,
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ 
+            action: "saveEpisode", 
+            seasonName: currentSeasonName, 
+            episodeNumber: viewingEp, 
+            scores: scores 
         }),
     });
-
-    // Pula para a aba de evolução recarregando a planilha
-    loadSeasonDashboard(currentSeasonName, "tab-evolucao");
+    location.reload();
 }
 
 /* ==========================================================================

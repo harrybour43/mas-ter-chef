@@ -333,12 +333,11 @@ function buildRaceAndRanking(data, epCount) {
     drawRankingChart(data, epCount); // Desenha o gráfico Chart.js tradicional
 }
 
-// Função chamada sempre que o usuário arrasta o controle deslizante de tempo
 window.scrubRace = function(epNumber) {
     document.getElementById("scrubEpDisplay").innerText = epNumber;
     const epIndex = epNumber - 1;
 
-    // Acha a nota máxima do episódio selecionado para usar como 100% de altura
+    // 1. Calcula o máximo de pontos no episódio selecionado (para ajustar a escala das barras)
     let maxPts = 1;
     globalRaceData.forEach(p => {
         if (p.elimEp === -1 || epIndex <= p.elimEp) {
@@ -346,19 +345,21 @@ window.scrubRace = function(epNumber) {
         }
     });
 
-    // Atualiza alturas e esconde mortos
+    // 2. Atualiza a altura de cada barra dinamicamente
     globalRaceData.forEach(p => {
         const col = document.getElementById(`race-col-${p.id}`);
         const fill = document.getElementById(`race-fill-${p.id}`);
         const scoreLabel = document.getElementById(`race-score-${p.id}`);
 
+        // Se o participante foi eliminado em episódio anterior ao atual, esconde a coluna
         if (p.elimEp !== -1 && epIndex > p.elimEp) {
-            col.style.display = "none"; // Oculta espaço
+            col.style.display = "none";
         } else {
             col.style.display = "flex";
             let pts = p.history[epIndex];
             scoreLabel.innerText = pts;
-            fill.style.height = (pts / maxPts * 100) + "%"; // Altura relativa ao lider
+            // Altura da barra proporcional ao líder do episódio
+            fill.style.height = (pts / maxPts * 100) + "%";
         }
     });
 }
@@ -487,4 +488,67 @@ function buildDashboard(data2D) {
         tr.dataset.rowIndex = index;
         tbody.appendChild(tr);
     });
+}
+
+
+/**
+ * Calcula o episódio atual baseado na data de estreia.
+ * @param {string} dataEstreia - Formato 'YYYY-MM-DD'
+ * @returns {number} - O número do episódio que deve estar visível
+ */
+function calcularEpisodioAtual(dataEstreia) {
+    const estreia = new Date(dataEstreia + 'T22:00:00'); // 22h da estreia
+    const hoje = new Date();
+    
+    // Diferença em milissegundos
+    const diffTime = hoje - estreia;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return 1; // Ainda não estreou
+    
+    // A cada 7 dias um novo episódio
+    const epiAtual = Math.floor(diffDays / 7) + 1;
+    
+    // Limita ao número máximo de episódios da temporada
+    return Math.min(epiAtual, maxEp);
+}
+
+// === ALTERE A FUNÇÃO loadSeasonDashboard ===
+async function loadSeasonDashboard(seasonName, openTab = "tab-pontuar") {
+    currentSeasonName = seasonName;
+    document.getElementById("seasonSelector").classList.add("hidden");
+    document.getElementById("tab-pontuar").classList.add("hidden");
+    document.getElementById("loadingScreen").classList.remove("hidden");
+
+   // Dentro da função loadSeasonDashboard
+const dataEstreia = "2026-05-26"; 
+viewingEp = calcularEpisodioAtual(dataEstreia); 
+
+// Força a barra deslizante (scrubber) a iniciar no mesmo episódio que a navegação
+const scrubber = document.getElementById("epScrubber");
+scrubber.value = viewingEp; 
+scrubRace(viewingEp); // Inicia a corrida de barras no ponto atual
+
+    try {
+        const data2D = await safeFetch(SCRIPT_URL + `?action=readSeason&name=${encodeURIComponent(seasonName)}`);
+        currentSeasonData = data2D;
+        maxEp = data2D[0].length - baseCols; 
+
+        // === NOVA LÓGICA DE DATA ===
+        // Supondo que a data da temporada esteja salva em algum lugar ou definimos fixo:
+        const dataEstreia = "2026-05-26"; 
+        viewingEp = calcularEpisodioAtual(dataEstreia);
+
+        document.getElementById("loadingScreen").classList.add("hidden");
+        document.getElementById("epNavBar").classList.remove("hidden");
+        document.getElementById("bottomNav").classList.remove("hidden");
+
+        renderEpisode();
+        renderCharts(data2D, maxEp);
+
+        const navBtn = document.querySelector(`.nav-item[onclick*="${openTab}"]`);
+        switchTab(openTab, navBtn);
+    } catch (e) {
+        alert("Erro ao carregar"); location.reload();
+    }
 }
